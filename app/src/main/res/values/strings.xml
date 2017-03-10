@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">MyMusic</string>
+    <string name="songname">歌曲名</string>
+    <string name="playername">歌手名</string>
+    <string name="albumname">专辑名</string>
+    <string name="listname">歌单名</string>
+</resources>
