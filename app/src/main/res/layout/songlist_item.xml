@@ -32,7 +32,7 @@
           android:textSize="16sp"
           android:gravity="center|left"
           android:text="@string/playername"
-          android:textColor="#000"/>
+          android:textColor="#797979"/>
   </LinearLayout>
 
 </LinearLayout>

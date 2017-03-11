@@ -69,7 +69,7 @@ public class ListViewFragment extends Fragment {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                getFragmentManager().popBackStack();
+                getFragmentManager().popBackStack();  //按上面的返回键返回之前的碎片界面
             }
         });
     }
