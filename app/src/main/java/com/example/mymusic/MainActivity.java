@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.IBinder;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -15,12 +16,15 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
 import com.example.mymusic.Server.MusicService;
 import com.example.mymusic.adapter.SongAdapter;
+import com.example.mymusic.fragment.ListViewFragment;
+import com.example.mymusic.fragment.MainViewFragment;
 import com.example.mymusic.model.Song;
 import com.example.mymusic.utils.MusicLoader;
 import com.example.mymusic.utils.MyApplication;
@@ -33,7 +37,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
-    private ListView listView;
+    //private ListView listView;
 
     private TextView sequence;
     private TextView songname;
@@ -42,9 +46,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button playButton;
     private Button nextButton;
 
+//    private Button localButton;
+//    private Button myfavoriteButton;
+//    private Button downloadButton;
+
+    private LinearLayout firstLayout;
+    ListViewFragment fragment;
+
     //List<Song> songlist=new ArrayList<Song>();  //存放从数据库中获得的歌曲
     List<Song> songlist=null;
-    SongAdapter adapter;
+    //SongAdapter adapter;
     private static Song nsong;  //当前播放的歌曲
     private static int index;
     SharedPreferences pref;
@@ -55,11 +66,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        listView=(ListView)findViewById(R.id.song_list);
+        //listView=(ListView)findViewById(R.id.song_list);
         songimage=(ImageView)findViewById(R.id.song_iamge);
         songname=(TextView)findViewById(R.id.song_name);
         playername=(TextView)findViewById(R.id.player_name);
-        sequence=(TextView)findViewById(R.id.songlist_item_sequence);
+        //sequence=(TextView)findViewById(R.id.songlist_item_sequence);
+        firstLayout=(LinearLayout)findViewById(R.id.first_show);
 
         playButton=(Button)findViewById(R.id.mainplay_button);
         nextButton=(Button)findViewById(R.id.nextplay_button);
@@ -69,23 +81,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         pref =getSharedPreferences("listIndex",MODE_PRIVATE);
         //songlist=new MusicLoader().queryData(); //将数据传入songlist
         songlist = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
-        adapter=new SongAdapter(this,R.layout.songlist_item,songlist);
-        listView.setAdapter(adapter);
+        //adapter=new SongAdapter(this,R.layout.songlist_item,songlist);
+        //listView.setAdapter(adapter);
         //sequence.setText(songlist.get(index));
         final Intent intent=new Intent(this, MusicService.class);
         startService(intent);
         bindService(intent,connection,BIND_AUTO_CREATE);
 
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                index=position;
-                nsong=songlist.get(position);
-                songname.setText(nsong.getSongName());
-                playername.setText(nsong.getArtist());
-                musicBinder.chooseSong(index);
-            }
-        });
+//        localButton=(Button)findViewById(R.id.local_button);
+//        localButton.setOnClickListener(this);
+//        myfavoriteButton=(Button)findViewById(R.id.myfavorite_button);
+//        myfavoriteButton.setOnClickListener(this);
+
+//        listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                index=position;
+//                nsong=songlist.get(position);
+//                songname.setText(nsong.getSongName());
+//                playername.setText(nsong.getArtist());
+//                musicBinder.chooseSong(index);
+//            }
+//        });
+
+        replaceFragment(new MainViewFragment());
     }
 
     //供碎片调用的方法
@@ -124,6 +143,24 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 songname.setText(nsong.getSongName());
                 playername.setText(nsong.getArtist());
                 break;
+//            case R.id.local_button:
+//                firstLayout.setVisibility(View.GONE);
+//                fragment=new ListViewFragment();
+//                fragment.addListData(songlist,"本地音乐");
+//                replaceFragment(fragment);
+//                break;
+//            case R.id.myfavorite_button:
+//                fragment=new ListViewFragment();
+//                fragment.addListData(songlist,"我喜欢");
+//                replaceFragment(fragment);
+//                break;
+            default:
+                break;
         }
+    }
+
+    //替换碎片
+    private void replaceFragment(Fragment fragment){
+        getSupportFragmentManager().beginTransaction().replace(R.id.view_fragment,fragment).commit();
     }
 }
