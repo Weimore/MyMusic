@@ -2,8 +2,11 @@ package com.example.mymusic;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.IBinder;
@@ -62,6 +65,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private MusicService.MusicBinder musicBinder;
 
+    private ActivityBroadcastReceiver receiver;
+
+    private static Boolean play=false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,30 +83,53 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         playButton.setOnClickListener(this);
         nextButton.setOnClickListener(this);
 
-        pref =getSharedPreferences("listIndex",MODE_PRIVATE);
         //songlist=new MusicLoader().queryData(); //将数据传入songlist
         songlist = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
+
 
         final Intent intent=new Intent(this, MusicService.class);
         startService(intent);
         bindService(intent,connection,BIND_AUTO_CREATE);
 
+        IntentFilter filter=new IntentFilter();
+        filter.addAction("com.example.mymusic.ACTIVITY_BROADCAST");
+        receiver=new ActivityBroadcastReceiver();
+        registerReceiver(receiver,filter);
+
+        //获取service传来的index，并调整下面的歌曲显示
+        pref =getSharedPreferences("DATA",MODE_PRIVATE);
+        index=pref.getInt("INDEX",0);
+        changeBottom(index);
+        //判断此时歌曲是否在后台播放，改变播放按钮的状态
+        play=pref.getBoolean("PLAYPRPAUSE",false);
+        playOrStop(play);
+
+
         replaceFragment(new MainViewFragment());
     }
 
-    //供碎片调用的方法
-    public void changeBottom(int mindex,Song song){
+    //改变视图
+    public void changeBottom(int mindex){
         index=mindex;
-        nsong=song;
+        nsong=songlist.get(index);
         songname.setText(nsong.getSongName());
         playername.setText(nsong.getArtist());
+
+    }
+
+    //供碎片调用的方法,播放歌曲
+    public void playSong(int mindex){
+        changeBottom(mindex);
         musicBinder.chooseSong(index);
+        play=true;
+        playOrStop(play);
     }
 
     private ServiceConnection connection=new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             musicBinder=(MusicService.MusicBinder)service;
+            musicBinder.init(index);
         }
 
         @Override
@@ -112,7 +142,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.mainplay_button:
-                musicBinder.playSong(index);
+                if(play==false) {
+                    musicBinder.mbplaySong(index);
+                    play=true;
+                    playOrStop(play);
+                }else {
+                    musicBinder.pauseSong();
+                    play=false;
+                    playOrStop(play);
+                }
                 songname.setText(nsong.getSongName());
                 playername.setText(nsong.getArtist());
                 break;
@@ -120,6 +158,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 index+=1;
                 nsong=songlist.get(index);
                 musicBinder.nextSong(index);
+                play=true;
+                playOrStop(play);
                 songname.setText(nsong.getSongName());
                 playername.setText(nsong.getArtist());
                 break;
@@ -137,5 +177,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy() {
         super.onDestroy();
         unbindService(connection);
+        unregisterReceiver(receiver);
+    }
+
+
+    private void playOrStop(Boolean play){
+        if(play==true){
+            playButton.setBackgroundResource(R.drawable.play_normal);
+        }else {
+            playButton.setBackgroundResource(R.drawable.play_pressed);
+        }
+    }
+
+    private class ActivityBroadcastReceiver extends BroadcastReceiver{
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            index=intent.getIntExtra("index",0);
+            changeBottom(index);
+            play=intent.getBooleanExtra("PLAYORPAUSE",false);
+            playOrStop(play);
+        }
     }
 }

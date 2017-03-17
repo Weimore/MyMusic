@@ -34,8 +34,8 @@ public class ListViewFragment extends Fragment {
     SongAdapter adapter;
 
     MainActivity activity;
-    private static int lindex;
-    private static Song lsong;
+//    private static int lindex;
+//    private static Song lsong;
 
     private String mtext;
     @Nullable
@@ -60,9 +60,9 @@ public class ListViewFragment extends Fragment {
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                lindex=position;
-                lsong=songlist.get(lindex);
-                activity.changeBottom(lindex,lsong);
+//                lindex=position;
+//                lsong=songlist.get(lindex);
+                activity.playSong(position);
             }
         });
 

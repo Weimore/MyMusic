@@ -2,15 +2,24 @@ package com.example.mymusic.Server;
 
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.widget.Button;
 import android.widget.RemoteViews;
 
+import com.example.mymusic.MainActivity;
 import com.example.mymusic.R;
 import com.example.mymusic.model.Song;
 import com.example.mymusic.utils.ExitApp;
@@ -31,11 +40,34 @@ public class MusicService extends Service {
     List<Song> songList=null;
     private static int mindex;
     private static Song nsong;
+
+    SharedPreferences.Editor editor;
+    SharedPreferences pref;
+
+    NotifyBroadcastReceiver receiver;
+
+    RemoteViews remoteView;
+
+    Button playButton;
+    View view;
+
+    private static Boolean mPlay=false;
+
     @Override
     public void onCreate() {
         super.onCreate();
         mediaPlayer=new MediaPlayer();
         songList= MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
+        pref=getSharedPreferences("DATA",MODE_PRIVATE);
+        mindex=pref.getInt("INDEX",0);
+        nsong=songList.get(mindex);
+        getNotification();
+        initMediaPlayer(nsong.getUrl());
+
+        IntentFilter intentFilter=new IntentFilter();
+        intentFilter.addAction("com.example.mymusic.SERVICE_BROADCAST");
+        receiver=new NotifyBroadcastReceiver();
+        registerReceiver(receiver,intentFilter);
     }
 
     @Override
@@ -48,9 +80,12 @@ public class MusicService extends Service {
         super.onDestroy();
         if(mediaPlayer!=null){
             mediaPlayer.stop();
+            mPlay=false;
+            playOrStop(mPlay);
             mediaPlayer.release();
             mediaPlayer=null;
         }
+        unregisterReceiver(receiver);
         //退出整个程序
         exit.exitApp();
     }
@@ -58,19 +93,25 @@ public class MusicService extends Service {
     private MusicBinder mBinder=new MusicBinder();
 
     public class MusicBinder extends Binder{
-        public void playSong(int index){
-            if(!mediaPlayer.isPlaying()){
-                mindex=index;
-                nsong=songList.get(mindex);
-                getNotification();
-                initMediaPlayer(nsong.getUrl());
-                mediaPlayer.start();
-            }
+        public void init(int index){
+            mindex=index;
+            nsong=songList.get(mindex);
+            //initMediaPlayer(nsong.getUrl());
+        }
+
+        public void mbplaySong(int index){
+                if(!mediaPlayer.isPlaying()){
+                    mediaPlayer.start();
+                    mPlay=true;
+                    playOrStop(mPlay);
+                }
         }
 
         public void pauseSong(){
             if (mediaPlayer.isPlaying()){
                 mediaPlayer.pause();
+                mPlay=false;
+                playOrStop(mPlay);
             }
         }
 
@@ -97,6 +138,25 @@ public class MusicService extends Service {
         mediaPlayer.reset();
         initMediaPlayer(nsong.getUrl());
         mediaPlayer.start();
+        mPlay=true;
+        playOrStop(mPlay);
+
+        editor=pref.edit();                //如果activity未启动，则接收这个参数
+        editor.putInt("INDEX",mindex);
+        editor.commit();
+    }
+
+    //service中的playsong方法
+    public void playSong(int index){
+        if(!mediaPlayer.isPlaying()){
+            mindex=index;
+            nsong=songList.get(mindex);
+            getNotification();
+            initMediaPlayer(nsong.getUrl());
+            mediaPlayer.start();
+            mPlay=true;
+            playOrStop(mPlay);
+        }
     }
 
     private void initMediaPlayer(String path){
@@ -113,10 +173,77 @@ public class MusicService extends Service {
         NotificationManager manager=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
         NotificationCompat.Builder builder=new NotificationCompat.Builder(MyApplication.getContext())
                 .setSmallIcon(R.mipmap.ic_launcher);
-        RemoteViews remoteView=new RemoteViews(getPackageName(),R.layout.notify_item);
+        View view=LayoutInflater.from(this).inflate(R.layout.notify_item,null);
+
+
+        remoteView=new RemoteViews(getPackageName(),R.layout.notify_item);
         remoteView.setTextViewText(R.id.notify_song_name,nsong.getSongName());
         remoteView.setTextViewText(R.id.notify_player_name,nsong.getArtist());
+
+
+        //playButton=(Button)view.findViewById(R.id.notify_play);
+
+
+        //该段是对notification上按键的监听，点击后会发送广播，修改service上的geq显示，以及更改播放的歌曲
+        Intent intent1=new Intent("com.example.mymusic.SERVICE_BROADCAST");
+        intent1.putExtra("CODE","playorpause");
+        PendingIntent pi1=PendingIntent.getBroadcast(MyApplication.getContext(),1,intent1,PendingIntent.FLAG_CANCEL_CURRENT);
+        intent1.putExtra("CODE","next");
+        PendingIntent pi2=PendingIntent.getBroadcast(MyApplication.getContext(),2,intent1,PendingIntent.FLAG_CANCEL_CURRENT);
+
+        remoteView.setOnClickPendingIntent(R.id.notify_play,pi1);
+        remoteView.setOnClickPendingIntent(R.id.notify_next,pi2);
+
         builder.setContent(remoteView);
-        manager.notify(1,builder.build());
+        startForeground(1,builder.build());
     }
+
+    private class NotifyBroadcastReceiver extends BroadcastReceiver {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            Intent intent2=new Intent("com.example.mymusic.ACTIVITY_BROADCAST");
+
+            String code=intent.getStringExtra("CODE");
+            if(code.equals("playorpause")) {
+                if(mPlay==true){
+                    mediaPlayer.pause();
+                    mPlay=false;
+                    playOrStop(mPlay);
+                }
+                else {
+                    mediaPlayer.start();
+                    mPlay=true;
+                    playOrStop(mPlay);
+                }
+            }
+            else if(code.equals("next")){
+                mindex+=1;
+                changeSong(mindex);
+            }
+            intent2.putExtra("index",mindex);  //发送给activity的广播接收器的参数
+            intent2.putExtra("PLAYORPAUSE",mPlay);
+            sendBroadcast(intent2);
+
+
+            editor=pref.edit();                //如果activity未启动，则接收这个参数
+            editor.putInt("INDEX",mindex);
+            editor.putBoolean("PLAYORPAUSE",mPlay);
+            editor.commit();
+        }
+
+    }
+
+    //notification上播放或暂停按钮的显示
+    private void playOrStop(Boolean play){
+        if(play==true){
+            //playButton.setBackgroundResource(R.drawable.start1);
+            remoteView.setImageViewResource(R.id.notify_play,R.drawable.start1);
+        }else {
+            //playButton.setBackgroundResource(R.drawable.pause2);
+            remoteView.setImageViewResource(R.id.notify_play,R.drawable.pause2);
+        }
+    }
+
 }

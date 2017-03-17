@@ -5,4 +5,5 @@
     <string name="albumname">专辑名</string>
     <string name="listname">歌单名</string>
     <string name="localsong">本地歌曲</string>
+    <string name="myfavorite">我喜欢</string>
 </resources>
