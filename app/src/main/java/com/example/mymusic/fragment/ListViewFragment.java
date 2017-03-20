@@ -47,7 +47,7 @@ public class ListViewFragment extends Fragment {
         backButton=(Button)view.findViewById(R.id.back_button);
         listView=(ListView)view.findViewById(R.id.list_view);
 
-        adapter=new SongAdapter(activity,R.layout.songlist_item,songlist);
+        adapter=new SongAdapter(activity,songlist,R.layout.songlist_item);
         listView.setAdapter(adapter);
         return view;
     }
