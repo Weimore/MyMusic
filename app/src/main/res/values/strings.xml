@@ -6,4 +6,5 @@
     <string name="listname">歌单名</string>
     <string name="localsong">本地歌曲</string>
     <string name="myfavorite">我喜欢</string>
+    <string name="recentsong">最近播放</string>
 </resources>

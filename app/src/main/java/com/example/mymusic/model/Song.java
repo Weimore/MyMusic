@@ -8,7 +8,7 @@ import org.litepal.crud.DataSupport;
  * Created by wn123 on 2017/2/26.
  */
 
-public class Song {
+public class Song extends DataSupport{
     public long getId() {
         return id;
     }

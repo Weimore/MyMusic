@@ -2,6 +2,8 @@ package com.example.mymusic.utils;
 
 import android.content.ContentResolver;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.media.ThumbnailUtils;
 import android.provider.MediaStore;
 import android.provider.Settings;
 
@@ -99,6 +101,8 @@ public class MusicLoader {
             //是否为音乐
             int isMusic = cursor.getInt(cursor
                     .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));
+
+//            Bitmap bitmap= ThumbnailUtils.
 
             LogUtil.itSelf.Log("cursorsssss" + displayName + isMusic + album + songName);//测试用语
 

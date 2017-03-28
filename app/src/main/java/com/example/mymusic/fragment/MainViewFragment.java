@@ -14,6 +14,8 @@ import com.example.mymusic.model.Song;
 import com.example.mymusic.utils.MusicLoader;
 import com.example.mymusic.utils.MyApplication;
 
+import org.litepal.crud.DataSupport;
+
 import java.util.List;
 
 /**
@@ -22,12 +24,16 @@ import java.util.List;
 
 public class MainViewFragment extends Fragment implements View.OnClickListener{
 
+
+
+
     private Button localButton;
     private Button myFavorite;
+    private Button recentButton;
 
-    private ListViewFragment fragment;
-
-    private List<Song> songlist;
+    private ListViewFragment listViewFragment;
+    private RecentSongFragment recentSongFragment;
+    private List<Song> songlist=MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
 
 
     @Nullable
@@ -36,6 +42,7 @@ public class MainViewFragment extends Fragment implements View.OnClickListener{
         View view=inflater.inflate(R.layout.main_view_fag,container,false);
         localButton=(Button)view.findViewById(R.id.local_button);
         myFavorite=(Button)view.findViewById(R.id.myfavorite_button);
+        recentButton=(Button)view.findViewById(R.id.recent_button);
         return view;
     }
 
@@ -44,20 +51,25 @@ public class MainViewFragment extends Fragment implements View.OnClickListener{
         super.onActivityCreated(savedInstanceState);
         localButton.setOnClickListener(this);
         myFavorite.setOnClickListener(this);
+        recentButton.setOnClickListener(this);
     }
 
     @Override
     public void onClick(View v) {
         switch (v.getId()){
             case R.id.local_button:
-                fragment=new ListViewFragment();
-                fragment.addListData(MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData(),"本地音乐");
-                replaceFragment(fragment);
+                listViewFragment=new ListViewFragment(R.layout.list_view_frag,R.layout.songlist_item,songlist,"本地音乐");
+                replaceFragment(listViewFragment);
                 break;
             case R.id.myfavorite_button:
-                fragment=new ListViewFragment();
-                fragment.addListData(MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData(),"我喜欢");
-                replaceFragment(fragment);
+                listViewFragment=new ListViewFragment(R.layout.list_view_frag,R.layout.songlist_item,songlist,"本地音乐");
+                replaceFragment(listViewFragment);
+                break;
+            case R.id.recent_button:
+                recentSongFragment=new RecentSongFragment(R.layout.recent_frag,R.layout.recent_item,DataSupport.order("id desc").find(Song.class),"最近播放");
+                replaceFragment(recentSongFragment);
+                break;
+            default:
                 break;
         }
     }

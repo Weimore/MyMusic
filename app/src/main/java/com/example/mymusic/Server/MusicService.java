@@ -24,9 +24,12 @@ import android.widget.RemoteViews;
 import com.example.mymusic.MainActivity;
 import com.example.mymusic.R;
 import com.example.mymusic.model.Song;
+import com.example.mymusic.utils.AddSongToDatabase;
 import com.example.mymusic.utils.ExitApp;
 import com.example.mymusic.utils.MusicLoader;
 import com.example.mymusic.utils.MyApplication;
+
+import org.litepal.crud.DataSupport;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,7 +45,7 @@ public class MusicService extends Service {
     List<Song> songList = null;
     private static int mindex;
     private static Song nsong;
-    private static int mProgress;
+    private static String NOWLIST="LOCAL";
 
     SharedPreferences.Editor editor;
     SharedPreferences pref;
@@ -56,12 +59,20 @@ public class MusicService extends Service {
 
     private static Boolean mPlay = false;
 
+    private AddSongToDatabase addSongToDatabase;
+
     @Override
     public void onCreate() {
         super.onCreate();
+        addSongToDatabase=new AddSongToDatabase();
         mediaPlayer = new MediaPlayer();
-        songList = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
         pref = getSharedPreferences("DATA", MODE_PRIVATE);
+        //判断当前是哪一个播放list
+        if (NOWLIST.equals("LOCAL")){
+            songList = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
+        }else if(NOWLIST.equals("RECENT")){
+            songList= DataSupport.order("id desc").find(Song.class);
+        }
         mindex = pref.getInt("INDEX", 0);
         nsong = songList.get(mindex);
         getNotification();
@@ -106,6 +117,7 @@ public class MusicService extends Service {
         }
 
         public void mbplaySong(int index) {
+            addSongToDatabase.addSongToRecent(songList.get(index));
             if (!mediaPlayer.isPlaying()) {
                 mediaPlayer.start();
                 mPlay = true;
@@ -129,7 +141,15 @@ public class MusicService extends Service {
             changeSong(index);
         }
 
-        public void chooseSong(int index) {
+        public void chooseSong(int index,String nowlist) {
+            if (nowlist.equals("LOCAL")){
+                songList = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
+            }else if(nowlist.equals("RECENT")){
+                songList= DataSupport.order("id desc").find(Song.class);
+            }
+            editor=pref.edit();
+            editor.putString("LIST",nowlist);
+            editor.commit();
             changeSong(index);
         }
 
@@ -161,6 +181,7 @@ public class MusicService extends Service {
     public void changeSong(int index) {
         mindex = index;
         nsong = songList.get(mindex);
+        addSongToDatabase.addSongToRecent(nsong);
         getNotification();
         mediaPlayer.reset();
         initMediaPlayer(nsong.getUrl());
@@ -178,6 +199,7 @@ public class MusicService extends Service {
         if (!mediaPlayer.isPlaying()) {
             mindex = index;
             nsong = songList.get(mindex);
+            addSongToDatabase.addSongToRecent(nsong);
             getNotification();
             initMediaPlayer(nsong.getUrl());
             mediaPlayer.start();
@@ -245,6 +267,9 @@ public class MusicService extends Service {
                 }
             } else if (code.equals("next")) {
                 mindex += 1;
+                if(mindex>=songList.size()){
+                    mindex=0;
+                }
                 changeSong(mindex);
             }
             intent2.putExtra("index", mindex);  //发送给activity的广播接收器的参数
