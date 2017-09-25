@@ -3,29 +3,16 @@ package com.example.mymusic.fragment;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-import com.example.mymusic.MainActivity;
 import com.example.mymusic.R;
 
-import com.example.mymusic.listener.ActivityListener;
 import com.example.mymusic.model.Song;
 import com.example.mymusic.utils.CommonAdapter;
-import com.example.mymusic.utils.MyApplication;
 import com.example.mymusic.utils.ViewHolder;
 
 import java.util.List;
-
-import static android.content.Context.MODE_PRIVATE;
 
 /**
  * Created by wn123 on 2017/3/10.
@@ -61,7 +48,8 @@ public class ListViewFragment extends BaseListFragment<Song> {
         }
 
         @Override
-        public void convert(ViewHolder holder, Song song) {
+        public void convert(ViewHolder holder, Song song, int position) {
+//            ((TextView)holder.getView(R.id.songlist_item_sequence)).setText(position+1);
             ((TextView)holder.getView(R.id.songlist_item_songname)).setText(song.getSongName());
             ((TextView)holder.getView(R.id.songlist_item_playername)).setText(song.getArtist());
         }

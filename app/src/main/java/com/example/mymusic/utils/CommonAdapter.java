@@ -31,12 +31,12 @@ public abstract class CommonAdapter<T> extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder holder=ViewHolder.get(mContext,convertView,parent,mLayoutId,position);
 
-        convert(holder,getItem(position));
+        convert(holder,getItem(position), position);
 
         return holder.getmConvertView();
     }
 
-    public abstract void convert(ViewHolder holder,T t);
+    public abstract void convert(ViewHolder holder, T t, int position);
 
     @Override
     public long getItemId(int position) {

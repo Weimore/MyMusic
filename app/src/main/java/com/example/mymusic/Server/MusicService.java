@@ -66,7 +66,16 @@ public class MusicService extends Service {
         super.onCreate();
         addSongToDatabase=new AddSongToDatabase();
         mediaPlayer = new MediaPlayer();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mindex+=1;
+                changeSong(mindex);
+                sendBroadToActivity();
+            }
+        });
         pref = getSharedPreferences("DATA", MODE_PRIVATE);
+        NOWLIST=pref.getString("LIST","LOCAL");
         //判断当前是哪一个播放list
         if (NOWLIST.equals("LOCAL")){
             songList = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
@@ -98,7 +107,8 @@ public class MusicService extends Service {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mPlay = false;
-            playOrStop(mPlay);
+            //playOrStop(mPlay);
+            getNotification();
             mediaPlayer.release();
             mediaPlayer = null;
         }
@@ -121,7 +131,8 @@ public class MusicService extends Service {
             if (!mediaPlayer.isPlaying()) {
                 mediaPlayer.start();
                 mPlay = true;
-                playOrStop(mPlay);
+                //playOrStop(mPlay);
+                getNotification();
             }
         }
 
@@ -129,7 +140,8 @@ public class MusicService extends Service {
             if (mediaPlayer.isPlaying()) {
                 mediaPlayer.pause();
                 mPlay = false;
-                playOrStop(mPlay);
+                //playOrStop(mPlay);
+                getNotification();
             }
         }
 
@@ -145,7 +157,7 @@ public class MusicService extends Service {
             if (nowlist.equals("LOCAL")){
                 songList = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
             }else if(nowlist.equals("RECENT")){
-                songList= DataSupport.order("id desc").find(Song.class);
+                songList= DataSupport.where("recentPlay = ?","1").order("id desc").find(Song.class);
             }
             editor=pref.edit();
             editor.putString("LIST",nowlist);
@@ -187,7 +199,8 @@ public class MusicService extends Service {
         initMediaPlayer(nsong.getUrl());
         mediaPlayer.start();
         mPlay = true;
-        playOrStop(mPlay);
+        //playOrStop(mPlay);
+        getNotification();
 
         editor = pref.edit();                //如果activity未启动，则接收这个参数
         editor.putInt("INDEX", mindex);
@@ -204,7 +217,8 @@ public class MusicService extends Service {
             initMediaPlayer(nsong.getUrl());
             mediaPlayer.start();
             mPlay = true;
-            playOrStop(mPlay);
+            //playOrStop(mPlay);
+            getNotification();
         }
     }
 
@@ -229,7 +243,13 @@ public class MusicService extends Service {
         remoteView.setTextViewText(R.id.notify_song_name, nsong.getSongName());
         remoteView.setTextViewText(R.id.notify_player_name, nsong.getArtist());
 
-
+        if (mPlay) {
+            //playButton.setBackgroundResource(R.drawable.start1);
+            remoteView.setImageViewResource(R.id.notify_play, R.drawable.pause2);
+        } else {
+            //playButton.setBackgroundResource(R.drawable.pause2);
+            remoteView.setImageViewResource(R.id.notify_play, R.drawable.start1);
+        }
         //playButton=(Button)view.findViewById(R.id.notify_play);
 
 
@@ -252,18 +272,20 @@ public class MusicService extends Service {
         @Override
         public void onReceive(Context context, Intent intent) {
 
-            Intent intent2 = new Intent("com.example.mymusic.ACTIVITY_BROADCAST");
+
 
             String code = intent.getStringExtra("CODE");
             if (code.equals("playorpause")) {
                 if (mPlay == true) {
                     mediaPlayer.pause();
                     mPlay = false;
-                    playOrStop(mPlay);
+                    //playOrStop(mPlay);
+                    getNotification();
                 } else {
                     mediaPlayer.start();
                     mPlay = true;
-                    playOrStop(mPlay);
+                    //playOrStop(mPlay);
+                    getNotification();
                 }
             } else if (code.equals("next")) {
                 mindex += 1;
@@ -272,28 +294,34 @@ public class MusicService extends Service {
                 }
                 changeSong(mindex);
             }
-            intent2.putExtra("index", mindex);  //发送给activity的广播接收器的参数
-            intent2.putExtra("PLAYORPAUSE", mPlay);
-            sendBroadcast(intent2);
 
-
-            editor = pref.edit();                //如果activity未启动，则接收这个参数
-            editor.putInt("INDEX", mindex);
-            editor.putBoolean("PLAYORPAUSE", mPlay);
-            editor.commit();
+            sendBroadToActivity();
         }
 
+    }
+
+    private void sendBroadToActivity() {
+        Intent intent2 = new Intent("com.example.mymusic.ACTIVITY_BROADCAST");
+        intent2.putExtra("index", mindex);  //发送给activity的广播接收器的参数
+        intent2.putExtra("PLAYORPAUSE", mPlay);
+        sendBroadcast(intent2);
+
+
+        editor = pref.edit();                //如果activity未启动，则接收这个参数
+        editor.putInt("INDEX", mindex);
+        editor.putBoolean("PLAYORPAUSE", mPlay);
+        editor.commit();
     }
 
     //notification上播放或暂停按钮的显示
-    private void playOrStop(Boolean play) {
-        if (play == true) {
-            //playButton.setBackgroundResource(R.drawable.start1);
-            remoteView.setImageViewResource(R.id.notify_play, R.drawable.start1);
-        } else {
-            //playButton.setBackgroundResource(R.drawable.pause2);
-            remoteView.setImageViewResource(R.id.notify_play, R.drawable.pause2);
-        }
-    }
+//    private void playOrStop(Boolean play) {
+//        if (play == true) {
+//            //playButton.setBackgroundResource(R.drawable.start1);
+//            remoteView.setImageViewResource(R.id.notify_play, R.drawable.start1);
+//        } else {
+//            //playButton.setBackgroundResource(R.drawable.pause2);
+//            remoteView.setImageViewResource(R.id.notify_play, R.drawable.pause2);
+//        }
+//    }
 
 }

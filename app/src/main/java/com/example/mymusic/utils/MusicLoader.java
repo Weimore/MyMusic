@@ -28,6 +28,8 @@ public class MusicLoader {
     //单例模式
 
     //要查询音乐的数据
+    private List<Song> mSongList;
+    private boolean search=false;
 
     public static MusicLoader getInstance(ContentResolver mcontentResolver) {
         if (contentResolver == null) {
@@ -54,76 +56,82 @@ public class MusicLoader {
 ////        if (cr == null) {
 ////            return;
 ////        }
-        // 获取所有歌曲
-        Cursor cursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                null, null, null, MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
-        Song song;
-        List<Song> songList = new ArrayList<Song>();
-        if(cursor!=null){
-        while(cursor.moveToNext()) {
 
-            //歌曲名
-            String songName = cursor.getString(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.TITLE));
+        mSongList = DataSupport.findAll(Song.class);
+        if (mSongList.size() > 0) {
+            return mSongList;
+        } else {
+            // 获取所有歌曲
+            Cursor cursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                    null, null, null, MediaStore.Audio.Media.DEFAULT_SORT_ORDER);
+            Song song;
+            mSongList=new ArrayList<>();
+            if (cursor != null) {
+                while (cursor.moveToNext()) {
 
-            //歌手
-            String artist = cursor.getString(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.ARTIST));
+                    //歌曲名
+                    String songName = cursor.getString(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.TITLE));
 
-            //专辑
-            String album = cursor.getString(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.ALBUM));
+                    //歌手
+                    String artist = cursor.getString(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.ARTIST));
 
-            //长度
-            long size = cursor.getLong(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.SIZE));
+                    //专辑
+                    String album = cursor.getString(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.ALBUM));
 
-            //时长
-            int duration = cursor.getInt(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.DURATION));
+                    //长度
+                    long size = cursor.getLong(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.SIZE));
 
-            //歌曲ID
-             long id = cursor.getInt(cursor
-                        .getColumnIndex(MediaStore.Audio.Media._ID));
+                    //时长
+                    int duration = cursor.getInt(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.DURATION));
 
-            //专辑ID
-             long albumId = cursor.getInt(cursor
-                        .getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
+                    //歌曲ID
+                    long id = cursor.getInt(cursor
+                            .getColumnIndex(MediaStore.Audio.Media._ID));
 
-            //路径
-            String url = cursor.getString(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.DATA));
+                    //专辑ID
+                    long albumId = cursor.getInt(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.ALBUM_ID));
 
-            //显示的文件名
-            String displayName = cursor.getString(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+                    //路径
+                    String url = cursor.getString(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.DATA));
 
-            //是否为音乐
-            int isMusic = cursor.getInt(cursor
-                    .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));
+                    //显示的文件名
+                    String displayName = cursor.getString(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME));
+
+                    //是否为音乐
+                    int isMusic = cursor.getInt(cursor
+                            .getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));
 
 //            Bitmap bitmap= ThumbnailUtils.
 
-            LogUtil.itSelf.Log("cursorsssss" + displayName + isMusic + album + songName);//测试用语
+                    LogUtil.itSelf.Log("cursorsssss" + displayName + isMusic + album + songName);//测试用语
 
-            //获取文件类型
-            String tailName;
-            if (displayName != null) {
-                tailName = displayName.substring(displayName.length() - 3, displayName.length());
+                    //获取文件类型
+                    String tailName;
+                    if (displayName != null) {
+                        tailName = displayName.substring(displayName.length() - 3, displayName.length());
+                    } else {
+                        tailName = "no";
+                    }
+                    if (isMusic != 0 && (tailName.equals("mp3") || tailName.equals("wav") || tailName.length()>1024*1024)) {
+                        song = new Song(id, albumId, album, songName, artist, size, duration, url, displayName);
+                        song.save();
+                        mSongList.add(song);
+                    }
+                }
+                cursor.close();
+                return mSongList;
             } else {
-                tailName = "no";
-            }
-            if (isMusic != 0 && (tailName.equals("mp3") || tailName.equals("wav"))) {
-                song =new Song(id,albumId,album,songName,artist,size,duration,url,displayName);
-                songList.add(song);
-            }
-        }
-            cursor.close();
-            //songList=DataSupport.findAll(Song.class);
-            return songList;
-       }else{
                 return null;
             }
-            }
+        }
+    }
         }
 

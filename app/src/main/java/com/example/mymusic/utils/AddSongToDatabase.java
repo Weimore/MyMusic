@@ -18,23 +18,26 @@ public class AddSongToDatabase {
 
 
     public void addSongToRecent(Song song){
-        String songName=song.getSongName();
-        List <Song> Songs= DataSupport.where("songName = ?",songName).find(Song.class);
-        if(Songs.size()<=0){
-            Log.d("add","aad");
-            getRecentSong(song);
+        int recentPlay=song.getRecentPlay();
+        if (recentPlay!=1){
+            song.setRecentPlay(1);
+            song.save();
         }
-//        else {//如果数据库里已有该歌曲，则将其删除，重新添加
-//            for (Song recSong:Songs) {
-//                DataSupport.delete(Song.class, recSong.getId());
-//            }
+//        if(Songs.size()<=0){
+//            Log.d("add","aad");
 //            getRecentSong(song);
 //        }
-
-    }
-    private void getRecentSong(Song song) {
-        Song recSong=new Song(song.getId(),song.getAlbumId(),song.getAlbum(),
-                song.getSongName(),song.getArtist(),song.getSize(),song.getDuration(),song.getUrl(),song.getDisplayName());
-        recSong.save();
+////        else {//如果数据库里已有该歌曲，则将其删除，重新添加
+////            for (Song recSong:Songs) {
+////                DataSupport.delete(Song.class, recSong.getId());
+////            }
+////            getRecentSong(song);
+////        }
+//
+//    }
+//    private void getRecentSong(Song song) {
+//        Song recSong=new Song(song.getId(),song.getAlbumId(),song.getAlbum(),
+//                song.getSongName(),song.getArtist(),song.getSize(),song.getDuration(),song.getUrl(),song.getDisplayName());
+//        recSong.save();
     }
 }

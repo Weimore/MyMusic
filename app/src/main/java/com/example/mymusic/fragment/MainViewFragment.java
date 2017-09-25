@@ -41,7 +41,7 @@ public class MainViewFragment extends Fragment implements View.OnClickListener{
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view=inflater.inflate(R.layout.main_view_fag,container,false);
         localButton=(Button)view.findViewById(R.id.local_button);
-        myFavorite=(Button)view.findViewById(R.id.myfavorite_button);
+//        myFavorite=(Button)view.findViewById(R.id.myfavorite_button);
         recentButton=(Button)view.findViewById(R.id.recent_button);
         return view;
     }
@@ -50,7 +50,7 @@ public class MainViewFragment extends Fragment implements View.OnClickListener{
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         localButton.setOnClickListener(this);
-        myFavorite.setOnClickListener(this);
+//        myFavorite.setOnClickListener(this);
         recentButton.setOnClickListener(this);
     }
 
@@ -61,12 +61,12 @@ public class MainViewFragment extends Fragment implements View.OnClickListener{
                 listViewFragment=new ListViewFragment(R.layout.list_view_frag,R.layout.songlist_item,songlist,"本地音乐");
                 replaceFragment(listViewFragment);
                 break;
-            case R.id.myfavorite_button:
-                listViewFragment=new ListViewFragment(R.layout.list_view_frag,R.layout.songlist_item,songlist,"本地音乐");
-                replaceFragment(listViewFragment);
-                break;
+//            case R.id.myfavorite_button:
+//                listViewFragment=new ListViewFragment(R.layout.list_view_frag,R.layout.songlist_item,songlist,"本地音乐kk");
+//                replaceFragment(listViewFragment);
+//                break;
             case R.id.recent_button:
-                recentSongFragment=new RecentSongFragment(R.layout.recent_frag,R.layout.recent_item,DataSupport.order("id desc").find(Song.class),"最近播放");
+                recentSongFragment=new RecentSongFragment(R.layout.recent_frag,R.layout.recent_item,DataSupport.where("recentPlay = ?","1").order("id desc").find(Song.class),"最近播放");
                 replaceFragment(recentSongFragment);
                 break;
             default:

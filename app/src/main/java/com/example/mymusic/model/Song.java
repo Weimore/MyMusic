@@ -101,6 +101,36 @@ public class Song extends DataSupport{
     private String url ;     //歌曲文件路径
     private String displayName; //显示文件名
 
+
+
+    public boolean isLove() {
+        return love;
+    }
+
+    public void setLove(boolean love) {
+        this.love = love;
+    }
+
+    public boolean isDownload() {
+        return download;
+    }
+
+    public void setDownload(boolean download) {
+        this.download = download;
+    }
+
+    public int getRecentPlay() {
+        return recentPlay;
+    }
+
+    public void setRecentPlay(int recentPlay) {
+        this.recentPlay = recentPlay;
+    }
+
+    private int recentPlay;
+    private boolean love;
+    private boolean download;
+
     private Bitmap bitmap;
 
     public Song(long id,long albumId,String album,String songName,String artist,long size,int duration,String url,String displayName){

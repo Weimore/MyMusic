@@ -8,18 +8,19 @@
             android:layout_height="?attr/actionBarSize"
             android:background="?attr/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
+            app:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+            />
 
         <Button
             android:id="@+id/local_button"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/localsong"/>
-    <Button
-        android:id="@+id/myfavorite_button"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/myfavorite"/>
+    <!--<Button-->
+        <!--android:id="@+id/myfavorite_button"-->
+        <!--android:layout_width="match_parent"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:text="@string/myfavorite"/>-->
     <Button
         android:id="@+id/recent_button"
         android:layout_width="match_parent"

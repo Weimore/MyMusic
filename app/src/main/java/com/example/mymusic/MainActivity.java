@@ -114,11 +114,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //songlist=new MusicLoader().queryData();
         // 将数据传入songlist
         pref = getSharedPreferences("DATA", MODE_PRIVATE);
+        NOWLIST=pref.getString("LIST","LOCAL");
         //判断当前是哪一个播放list
-        if (NOWLIST.equals("LOCAL")){
+       if (NOWLIST.equals("LOCAL")){
             songlist = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
         }else if(NOWLIST.equals("RECENT")){
-            songlist= DataSupport.order("id desc").find(Song.class);
+            songlist= DataSupport.where("recentPlay = ?","1").order("id desc").find(Song.class);
         }
 
 
@@ -191,7 +192,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (nowlist.equals("LOCAL")){
             songlist = MusicLoader.getInstance(MyApplication.getContext().getContentResolver()).queryData();
         }else if(nowlist.equals("RECENT")){
-            songlist= DataSupport.order("id desc").find(Song.class);
+            songlist= DataSupport.where("recentPlay = ?","1").order("id desc").find(Song.class);
         }
         editor=pref.edit();
         editor.putString("LIST",nowlist);
